@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 import * as firebase from 'firebase';
 
@@ -17,22 +17,50 @@ const firestore = firebase.firestore();
 const settings = {/* your settings... */ timestampsInSnapshots: true};
 firestore.settings(settings);
 
-
-
 var video;
 
 class App extends Component {
+
+  constructor(props){
+    super(props);
+    this.state = {email: '', password: ''};
+
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChange(event){
+    this.setState({ [event.target.name]: event.target.value });  
+  }
+
+  handleSubmit(event){
+    event.preventDefault()
+    console.log(this.state.email)
+    console.log(this.state.password)
+
+    firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password)
+    .then(function(user) {
+        console.log('sign up successful')
+      alert('sign up succuessful')
+    })
+    .catch(function(error) {
+      var errorCode = error.code,
+       errorMessage = error.message
+
+      if (errorCode === 'auth/weak-password') {
+        alert('thep password is too weak.')
+      } else {
+        alert(errorMessage)
+        console.log(errorMessage)
+      }
+    })
+  }
 
   fileUploaded(e){
     video = e.target.files[0];
     console.log(video)
   }
-  // vid.addEventListener('change', function(e){
-  //   video = e.target.files[0];
-  //   console.log(video)
-  //   });
-    
-
+  
   upload() {
     
     var date = new Date();
@@ -76,7 +104,6 @@ class App extends Component {
     }   
   }
 
-
   render() {
     return (
       <div className="App">
@@ -97,7 +124,7 @@ class App extends Component {
          
          <input type="button" onClick={this.cancel} value="Cancel" />
          <button onClick={this.upload} >Upload</button>
-     </div>
+        </div>
         <div>
         <ul id="home-all"></ul>
         </div>
@@ -111,14 +138,24 @@ class App extends Component {
             <textarea></textarea>
             <input type="button" value="Post" ng-click="Post"/>
             <p>Some text in the Modal..</p>
-          
+          </div>
         </div>
-      
-        </div>
+
+        <div id="login">
+          <div className="login-modal">
+            <span className="close">&times;</span>
+            <div></div>
+            <form onSubmit={this.handleSubmit}>
+              <input type="text" value={this.state.email} name="email"  onChange={this.handleChange}  placeholder="email" />
+
+              <input type="password" value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" />
+              <input type="submit" value="Login"/>
+            </form>
+          </div>
         </div>
 
 
-      
+      </div>
     );
   }
 }

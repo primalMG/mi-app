@@ -5,12 +5,13 @@ import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import * as firebase from 'firebase';
 
-ReactDOM.render(<App />, document.getElementById('root'));
-registerServiceWorker();
-
 const firestore = firebase.firestore();
 const settings = {/* your settings... */ timestampsInSnapshots: true};
 firestore.settings(settings);
+
+ReactDOM.render(<App />, document.getElementById('root'));
+registerServiceWorker();
+
 
 
 
