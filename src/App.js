@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
 import * as firebase from 'firebase';
+import renderHTML from 'react-render-html';
+import _ from 'lodash';
 
 var config = {
     apiKey: "AIzaSyAeYQ2gRNA28jt5hejGt4gjj0s02d2aLwA",
@@ -23,11 +25,56 @@ class App extends Component {
 
   constructor(props){
     super(props);
-    this.state = {email: '', password: ''};
+    this.state = {email: '', 
+    password: '', 
+    confirmPass: '',
+    posts: {}
+  };
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
+
+  componentDidMount(){
+    firestore.collection('songs').get().then((snapshot) => {
+      snapshot.forEach((doc) => {
+        this.setState({
+          posts: doc.data()
+        });
+      });
+    });
+  }
+
+  renderPosts() {
+    return _.map(this.state.posts, (post, key) => { 
+      console.log(key.name)
+      return (
+        <div key={key}>
+          <h2>{post.name}</h2>
+          <h2>hello makrmsn</h2>
+          <h2>{post.description}</h2>
+        </div>
+      );
+    });
+  }
+
+  // isValid(){
+  //   if (email === '' || password === '' || confirmPass === '') {
+  //     this.setState({
+  //       error: 'Please enter in all fields'
+  //     });
+  //     return false;
+  //   }
+
+  //   if (password !== confirmPassword) {
+  //     this.setState({
+  //       error: 'Please make sure your passwords match'
+  //     });
+  //     return false;
+  //   }
+
+  //   return true;
+  // }
 
   handleChange(event){
     this.setState({ [event.target.name]: event.target.value });  
@@ -140,6 +187,9 @@ class App extends Component {
             <p>Some text in the Modal..</p>
           </div>
         </div>
+          
+          {this.renderPosts()}
+      
 
         <div id="login">
           <div className="login-modal">
@@ -149,11 +199,13 @@ class App extends Component {
               <input type="text" value={this.state.email} name="email"  onChange={this.handleChange}  placeholder="email" />
 
               <input type="password" value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" />
+
+              <input type="password" value={this.state.confirmPass} onChange={this.handleChange} name="confirmPass" placeholder="Confirm password" />
               <input type="submit" value="Login"/>
             </form>
           </div>
         </div>
-
+     
 
       </div>
     );
