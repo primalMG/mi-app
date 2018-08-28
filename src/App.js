@@ -2,107 +2,63 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
 import * as firebase from 'firebase';
+import 'firebase/firestore'
 import renderHTML from 'react-render-html';
 import _ from 'lodash';
+import { UploadPost } from './UploadPost';
+import { SignUp } from './SignUp';
+import { firestore } from './firebase'
 
-var config = {
-    apiKey: "AIzaSyAeYQ2gRNA28jt5hejGt4gjj0s02d2aLwA",
-    authDomain: "marksmanfm-52dc6.firebaseapp.com",
-    databaseURL: "https://marksmanfm-52dc6.firebaseio.com",
-    projectId: "marksmanfm-52dc6",
-    storageBucket: "marksmanfm-52dc6.appspot.com",
-    messagingSenderId: "182840990388"
-}
-firebase.initializeApp(config);
 
-const firestore = firebase.firestore();
-const settings = {/* your settings... */ timestampsInSnapshots: true};
-firestore.settings(settings);
 
 var video;
+var upload = require('./UploadPost')
 
 class App extends Component {
 
   constructor(props){
     super(props);
+    this.colRef = firestore.collection('songs');
     this.state = {email: '', 
     password: '', 
     confirmPass: '',
-    posts: {}
+    posts: [],
+    fetching: false,
   };
 
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
+
   }
 
   componentDidMount(){
-    firestore.collection('songs').get().then((snapshot) => {
-      snapshot.forEach((doc) => {
-        this.setState({
-          posts: doc.data()
-        });
-      });
-    });
+    this.unsubcribeCol = this.colRef.onSnapshot(this.onColUpdate);
+    this.setState({fetching: true})
   }
 
+  componentWillUnmount(){
+    this.unsubcribeCol();
+  }
+
+  
   renderPosts() {
-    return _.map(this.state.posts, (post, key) => { 
-      console.log(key.name)
-      return (
-        <div key={key}>
-          <h2>{post.name}</h2>
-          <h2>hello makrmsn</h2>
-          <h2>{post.description}</h2>
-        </div>
-      );
+    const {posts, fetching} = this.state;
+    return <div>
+      {posts.map((doc) => < Posts key={doc.id} doc={doc} />)}
+    </div>;
+  }
+
+  onColUpdate = (snapshot) => {
+    const posts = snapshot.docs.map((docSnapshot) => ({
+      id: docSnapshot.id,
+      data: docSnapshot.data()
+    }));
+    this.setState({
+      posts: posts,
+      fetching: false
     });
-  }
+  };
 
-  // isValid(){
-  //   if (email === '' || password === '' || confirmPass === '') {
-  //     this.setState({
-  //       error: 'Please enter in all fields'
-  //     });
-  //     return false;
-  //   }
 
-  //   if (password !== confirmPassword) {
-  //     this.setState({
-  //       error: 'Please make sure your passwords match'
-  //     });
-  //     return false;
-  //   }
-
-  //   return true;
-  // }
-
-  handleChange(event){
-    this.setState({ [event.target.name]: event.target.value });  
-  }
-
-  handleSubmit(event){
-    event.preventDefault()
-    console.log(this.state.email)
-    console.log(this.state.password)
-
-    firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password)
-    .then(function(user) {
-        console.log('sign up successful')
-      alert('sign up succuessful')
-    })
-    .catch(function(error) {
-      var errorCode = error.code,
-       errorMessage = error.message
-
-      if (errorCode === 'auth/weak-password') {
-        alert('thep password is too weak.')
-      } else {
-        alert(errorMessage)
-        console.log(errorMessage)
-      }
-    })
-  }
-
+  
   fileUploaded(e){
     video = e.target.files[0];
     console.log(video)
@@ -151,30 +107,15 @@ class App extends Component {
     }   
   }
 
+
   render() {
     return (
       <div className="App">
         <header className="App-header">
        
         </header>
-        <div id="uploadTrack" ng-controller="uploads" >
-          
-          <input placeholder="title" data-key="title" id="name" className="track"/>
-           <select id="genre">
-             <option value="House">House</option>
-             <option value="Dnb">Dnb</option>
-             <option value="HipHop">Hip Hop</option>
-           </select>
-         <textarea type="textarea" placeholder="Description" id="des" className="track" data-key="Decription"></textarea><br/> 
-        
-         <input type="file" id="vid" data-key="trackURL" accept="video/*" className="track" onChange={this.fileUploaded} /><br/>
-         
-         <input type="button" onClick={this.cancel} value="Cancel" />
-         <button onClick={this.upload} >Upload</button>
-        </div>
-        <div>
-        <ul id="home-all"></ul>
-        </div>
+        <UploadPost />
+        <SignUp />
 
         <div id="myModal" className="modal">
           <div className="modal-content">
@@ -191,25 +132,31 @@ class App extends Component {
           {this.renderPosts()}
       
 
-        <div id="login">
-          <div className="login-modal">
-            <span className="close">&times;</span>
-            <div></div>
-            <form onSubmit={this.handleSubmit}>
-              <input type="text" value={this.state.email} name="email"  onChange={this.handleChange}  placeholder="email" />
-
-              <input type="password" value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" />
-
-              <input type="password" value={this.state.confirmPass} onChange={this.handleChange} name="confirmPass" placeholder="Confirm password" />
-              <input type="submit" value="Login"/>
-            </form>
-          </div>
-        </div>
-     
+ 
 
       </div>
     );
   }
 }
 
+class Posts extends React.Component {
+  render() {
+    const {doc} = this.props;
+    const {name, description, link} = doc.data;
+    let video
+    if (link != null){
+      video = <video src={link} controls="true"></video>
+    }
+    return (
+      <div className='App'>
+      <p>{name} - {description}</p>
+      <button>Comment</button>
+      <br/>
+      {video}
+
+    </div>
+    ); 
+  }
+} 
 export default App;
+

@@ -2,12 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import UploadPost from './UploadPost';
 import registerServiceWorker from './registerServiceWorker';
-import * as firebase from 'firebase';
 
-const firestore = firebase.firestore();
-const settings = {/* your settings... */ timestampsInSnapshots: true};
-firestore.settings(settings);
+
 
 ReactDOM.render(<App />, document.getElementById('root'));
 registerServiceWorker();
