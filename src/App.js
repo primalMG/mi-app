@@ -19,14 +19,10 @@ class App extends Component {
   constructor(props){
     super(props);
     this.colRef = firestore.collection('songs');
-    this.state = {email: '', 
-    password: '', 
-    confirmPass: '',
+    this.state = {
     posts: [],
     fetching: false,
-  };
-
-
+    };
   }
 
   componentDidMount(){
