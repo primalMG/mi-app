@@ -30,8 +30,8 @@ export class SignUp extends Component {
           alert('sign up succuessful')
         })
         .catch(function(error) {
-          var errorCode = error.code,
-           errorMessage = error.message
+          let errorCode = error.code,
+          errorMessage = error.message
     
           if (errorCode === 'auth/weak-password') {
             alert('thep password is too weak.')
