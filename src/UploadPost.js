@@ -51,26 +51,51 @@ export class UploadPost extends Component {
           () => {
             storage.ref('trackVideo/').child(video.name).getDownloadURL().then(url => {
               this.setState({url});
-              console.log('working')
-              let newQuery = {
+              firestore.collection('songs').add({
+              })
+              .then(docRef => {
+               let postKey = docRef.id
+               console.log(postKey)
+              const batch = firestore.batch()
+              const dbUser = firestore.collection('users').doc(postKey)
+              const newQuery = {
                 name: this.state.title,
                 //please get the time done uploadTime:,
                 genre: this.state.genre,
                 description: this.state.description,
-                link: this.state.url,
               }
-              firestore.collection('songs').add(newQuery)
+              batch.set(dbUser, newQuery)
+      
+              batch.commit().then(function (){
+      
+              })
+      
+              })
             })
           }
         );
       } else {
-        let newQuery = {
+        firestore.collection('songs').add({
+        })
+        .then(docRef => {
+         let postKey = docRef.id
+         console.log(postKey)
+        const batch = firestore.batch()
+        const dbUser = firestore.collection('users').doc(postKey)
+        const newQuery = {
           name: this.state.title,
           //please get the time done uploadTime:,
           genre: this.state.genre,
           description: this.state.description,
         }
-        firestore.collection('songs').add(newQuery)
+        batch.set(dbUser, newQuery)
+
+        batch.commit().then(function (){
+
+        })
+
+        })
+
       }
       
   }

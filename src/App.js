@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 // import logo from './logo.svg';
-import './App.css';
+import './Styles/App.css';
 import * as firebase from 'firebase';
 import 'firebase/firestore'
 import renderHTML from 'react-render-html';
 import _ from 'lodash';
 import { UploadPost } from './UploadPost';
 import { SignUp } from './SignUp';
+
 import { firestore } from './firebase'
 
 
 
 var video;
-var upload = require('./UploadPost')
 
 class App extends Component {
 
@@ -69,6 +69,7 @@ class App extends Component {
         </header>
         <UploadPost />
         <SignUp />
+
 
         <div id="myModal" className="modal">
           <div className="modal-content">
