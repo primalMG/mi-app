@@ -1,16 +1,12 @@
 import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './Styles/App.css';
-import * as firebase from 'firebase';
 import 'firebase/firestore'
-import renderHTML from 'react-render-html';
 import _ from 'lodash';
 import { UploadPost } from './UploadPost';
 import { SignUp } from './SignUp';
-
-import { firestore } from './firebase'
-
-
+import { firestore } from './firebase';
+import { Modal } from 'react-bootstrap';
 
 var video;
 
@@ -22,7 +18,21 @@ class App extends Component {
     this.state = {
     posts: [],
     fetching: false,
+ 
+   
     };
+    
+    this.handleCommentPrompt = this.handleCommentPrompt.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+  }
+
+  handleCommentPrompt(){
+    console.log('Comment section')
+    this.setState({show: true})
+  }
+
+  handleClose(){
+    this.setState({show: false})
   }
 
   componentDidMount(){
@@ -64,28 +74,20 @@ class App extends Component {
   render() {
     return (
       <div className="App">
+
         <header className="App-header">
-       
+        <div className="tab">
+        </div>
+        <div className="Account">
+         <SignUp />
+        </div>
         </header>
         <UploadPost />
-        <SignUp />
 
 
-        <div id="myModal" className="modal">
-          <div className="modal-content">
-            <span className="close">&times;</span>
-            <div id="title"></div>
-            <div id="currentTrack"></div>
-            <br/>
-            <textarea></textarea>
-            <input type="button" value="Post" ng-click="Post"/>
-            <p>Some text in the Modal..</p>
-          </div>
-        </div>
           
           {this.renderPosts()}
-      
-
+  
  
 
       </div>
@@ -94,20 +96,58 @@ class App extends Component {
 }
 
 class Posts extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      show: false,
+      description: '',
+    } 
+    this.handleCommentPrompt = this.handleCommentPrompt.bind(this);
+    this.handleClose = this.handleClose.bind(this);
+  }
+
+  handleCommentPrompt(){
+    this.setState({show: true})
+    //get title
+    //get description
+    //firebase galore stuff
+
+  }
+
+  handleClose(){
+    this.setState({show: false})
+  }
+
+
   render() {
+
+
     const {doc} = this.props;
-    const {name, description, link} = doc.data;
+    const {name, description, link, genre} = doc.data;
     let video
     if (link != null){
       video = <video src={link} controls="true"></video>
     }
     return (
       <div className='App'>
-      <p>{name} - {description}</p>
-      <button>Comment</button>
+      <p>{name} - {description} - {genre}</p>
+      <input type="button" value="Comment" onClick={this.handleCommentPrompt} />
       <br/>
       {video}
 
+          <Modal show={this.state.show} onHide={this.handleClose}>
+              <Modal.Body>
+                <form onSubmit={this.handlePostComment}>
+                  <p>Title of post</p>
+                  <p>description of post</p>
+                  <textarea placeholder="Have something to say about this post?"
+                   name="description" value={this.state.description} onChange={this.handleChange}>
+                   </textarea><br/>
+                  <input type="submit"  value="Comment"/>
+                </form>
+              </Modal.Body>
+            </Modal>
+      
     </div>
     ); 
   }

@@ -15,16 +15,16 @@ export class UploadPost extends Component {
         file: '',
         video: null,
         url: '',
+        date: new Date(),
       }
       this.handleChange = this.handleChange.bind(this)
       this.handleUpload = this.handleUpload.bind(this)
       this.handleVideo = this.handleVideo.bind(this)
     }
 
+
     handleChange(event){
       this.setState({ [event.target.name]: event.target.value });
-
-
     }
 
     handleVideo(e){
@@ -36,14 +36,15 @@ export class UploadPost extends Component {
 
     handleUpload(event){
       event.preventDefault()
-      console.log('triggerreddd')
       const { video } = this.state;
       if (video ){
           const uploadTask = storage.ref('trackVideo/' + video.name).put(video);
           uploadTask.on('state_changed',
           (snapshot) => {
             //please create a progress bar marksman <3
+            console.log(snapshot)
             return snapshot.ref.getDownloadURL();
+            
           },
           (error) => {
             console.log(error)
@@ -57,19 +58,19 @@ export class UploadPost extends Component {
                let postKey = docRef.id
                console.log(postKey)
               const batch = firestore.batch()
+              const dbContent = firestore.collection('songs').doc(postKey)
               const dbUser = firestore.collection('users').doc(postKey)
               const newQuery = {
                 name: this.state.title,
-                //please get the time done uploadTime:,
+                uploadTime: this.state.date,
+                link: url,
                 genre: this.state.genre,
                 description: this.state.description,
               }
               batch.set(dbUser, newQuery)
+              batch.set(dbContent, newQuery)
       
-              batch.commit().then(function (){
-      
-              })
-      
+              batch.commit()
               })
             })
           }
@@ -82,17 +83,17 @@ export class UploadPost extends Component {
          console.log(postKey)
         const batch = firestore.batch()
         const dbUser = firestore.collection('users').doc(postKey)
+        const dbContent = firestore.collection('songs').doc(postKey)
         const newQuery = {
           name: this.state.title,
-          //please get the time done uploadTime:,
+          uploadTime: this.state.date,
           genre: this.state.genre,
           description: this.state.description,
         }
+        batch.set(dbContent, newQuery)
         batch.set(dbUser, newQuery)
 
-        batch.commit().then(function (){
-
-        })
+        batch.commit()
 
         })
 
@@ -100,51 +101,6 @@ export class UploadPost extends Component {
       
   }
 
-    // (downloadURL) => {
-  
-    // },
-    // upload() {
-        
-    //     var date = new Date();
-    //     var name = document.getElementById('name')
-    //     var des = document.getElementById('des');
-    //     var genre = document.getElementById('genre');
-    //     var selectedGenre = genre.options[genre.selectedIndex].value; 
-    
-    //     if (video) {
-    //       var storageRef = storage.ref('trackVideo/' + video.name)
-    //         storageRef.put(video).then(snapshot => {
-    //         return snapshot.ref.getDownloadURL();
-    //     })
-    
-    //     .then(downloadURL => {
-    //       console.log(downloadURL)
-    //       var newTrack = {
-    //         name: name.value,
-    //         uploadTime: date,
-    //         genre: selectedGenre,
-    //         description: des.value,
-    //         link: downloadURL
-    //       }
-    //         firestore.collection('songs').add(newTrack)
-    //         // firestore.collection('users').add(newTrack)
-    //         return downloadURL;
-    //       })
-    
-    //     .catch(error => {
-    //       console.log('failed to upload the riddim')
-    //     })
-    //     } else {
-    //         var newTrack = {
-    //           name: name.value,
-    //           uploadTime: date,
-    //           genre: selectedGenre,
-    //           description: des.value,
-    //         }
-    //       firestore.collection('songs').add(newTrack)
-    //       console.log('other path')
-    //     }   
-    //   }
 
     render(){
         return (
@@ -156,7 +112,7 @@ export class UploadPost extends Component {
                <option value="Dnb">Dnb</option>
                <option value="HipHop">Hip Hop</option>
              </select>
-           <textarea type="textarea" placeholder="Description" name="description" value={this.state.description} onChange={this.handleChange}></textarea><br/> 
+           <textarea placeholder="Description" name="description" value={this.state.description} onChange={this.handleChange}></textarea><br/> 
           
            <input type="file" accept="video/*" name="video" onChange={this.handleVideo} /><br/>
            
