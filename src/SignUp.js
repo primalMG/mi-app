@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { auth, firestore } from './firebase';
 import { Modal } from 'react-bootstrap';
+import ErrorAlert from './ErrorAlert';
 
 
 
@@ -12,16 +13,12 @@ export class SignUp extends Component {
         username: '',
         password: '', 
         confirmPass: '',
+        error: '',
         show: false,
         SignUpModal: false
       };
-    
         this.handleChange = this.handleChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleLogin = this.handleLogin.bind(this);
-        this.loginPrompt = this.loginPrompt.bind(this);
         this.handleClose = this.handleClose.bind(this);
-        this.showSignUp = this.showSignUp.bind(this);
       }
 
       showSignUp(){
@@ -30,7 +27,15 @@ export class SignUp extends Component {
       }
 
       loginPrompt(e){
-        this.setState({show: true})
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            //auth.signOut()
+            //Account modal and tings.
+          } else {
+            this.setState({show: true})
+          }
+        })
+        
       }
 
       handleClose(e){
@@ -41,46 +46,53 @@ export class SignUp extends Component {
       handleChange(event){
         this.setState({ [event.target.name]: event.target.value });  
       }
+
+      validation(){
+        const { email, password, confirmPass } = this.state;
+        if ( email === '' || password === '' || confirmPass === ''){
+          this.setState({
+            error: "Please enter in all fields"
+          })
+          return false; 
+        }
+        if (password !== confirmPass) {
+          this.setState({ error: 'Passwords do not match'})
+          return false;
+        }
+        return true;
+      }
     
       handleSubmit(event){
         event.preventDefault()
-    
+        if(!this.validation()) {
+          return;
+        }
         auth.createUserWithEmailAndPassword(this.state.email, this.state.password)
         .then(user => {
           user = auth.currentUser.uid
-          console.log(user)
           firestore.collection('users').doc(user).set({
             username: this.state.username,
             email: this.state.email,
           })
-          .then(go => {
-            // console.log()
-          })
-            console.log('sign up successful')
-          alert('sign up succuessful')
+          console.log('sign up successful')
+          this.setState({SignUpModal: false})
         })
-        .catch(function(error) {
-          let errorCode = error.code,
-          errorMessage = error.message
-    
-          if (errorCode === 'auth/weak-password') {
-            alert('thep password is too weak.')
-          } else {
-            // alert(errorMessage)
-            console.log(errorMessage)
-          }
+        .catch(err => {
+          console.log(err.message)
+          this.setState({ error: err.message })
         })
-      
       }
 
       handleLogin(event){
         event.preventDefault()
         auth.signInWithEmailAndPassword(this.state.email, this.state.password)
         .then(user => {
-          //hide modal or summin or another, pls I'm tired.
+          this.setState({show: false})
+          console.log("sign in successful")
         })
-        .catch(error => {
-    
+        .catch(err => {
+          // this.setState()
+          //this.setState({ loginError: err.message })
         })
     
       }
@@ -90,33 +102,40 @@ export class SignUp extends Component {
         return (
             <div className="Account"> 
             <div>
-              <input type="button" onClick={this.loginPrompt} value="Account" />
+              <input type="button" onClick={this.loginPrompt.bind(this)} value="Account" />
             </div>
  
 
         <Modal show={this.state.show} onHide={this.handleClose}>
           <Modal.Body>
-            <form onSubmit={this.handleSubmit}>
-        <input type="text" value={this.state.email} name="email"  onChange={this.handleChange}  placeholder="email" />
+            <form onSubmit={this.handleLogin.bind(this)}>
+            <ul>
+        <li>Email:</li><li><input type="text" value={this.state.email} name="email"  onChange={this.handleChange}  placeholder="email" /></li>
 
-        <input type="password" value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" />
+        <li>Password:</li><li><input type="password" value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" /></li>
         <input type="submit" value="Login"/>
+        </ul>
         </form>
-        <input type="button" value="Sign Up" onClick={this.showSignUp} />
+        <input type="button" value="Sign Up" onClick={this.showSignUp.bind(this)} />
           </Modal.Body>
         
         </Modal>
 
         <Modal show={this.state.SignUpModal} onHide={this.handleClose}>
           <Modal.Body>
-          <form onSubmit={this.handleSubmit}>
-                <input type="text" value={this.state.email} name="email"  onChange={this.handleChange}  placeholder="email" />
-                <input type="text" value={this.state.username} name="username" onChange={this.handleChange} placeholder="username" />
+          <form onSubmit={this.handleSubmit.bind(this)}>
+            <ul>
+                <li>Email:</li><li><input type="text" className="txtAccount" value={this.state.email} name="email"onChange={this.handleChange}  placeholder="email" /></li>
+                <li>Username:</li> <li><input type="text" className="txtAccount" value={this.state.username} name="username" onChange={this.handleChange} placeholder="username" /></li>
                 
-                <input type="password" value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" />
+                <li>Password:</li><li><input type="password" className="txtAccount"  value={this.state.password} onChange={this.handleChange} name="password" placeholder="password" /></li>
 
-                <input type="password" value={this.state.confirmPass} onChange={this.handleChange} name="confirmPass" placeholder="Confirm password" />
+                <li>Confirm Password:</li><li><input type="password" className="txtAccount" value={this.state.confirmPass} onChange={this.handleChange} name="confirmPass" placeholder="Confirm password" /></li>
                 <input type="submit" value="SignUp"/>
+                </ul>
+                {this.state.error && <ErrorAlert>
+                  {this.state.error}
+                </ErrorAlert>}
               </form>
           </Modal.Body>
         </Modal>

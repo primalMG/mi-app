@@ -45,13 +45,6 @@ class App extends Component {
   }
 
   
-  renderPosts() {
-    const {posts, fetching} = this.state;
-    return <div>
-      {posts.map((doc) => < Posts key={doc.id} doc={doc} />)}
-    </div>;
-  }
-
   onColUpdate = (snapshot) => {
     const posts = snapshot.docs.map((docSnapshot) => ({
       id: docSnapshot.id,
@@ -63,6 +56,13 @@ class App extends Component {
     });
   };
 
+  renderPosts() {
+    const {posts, fetching} = this.state;
+    console.log(posts)
+    return <div>
+      {posts.map((doc) => < Posts key={doc.id} doc={doc} />)}
+    </div>;
+  }
 
   
   fileUploaded(e){
@@ -98,20 +98,61 @@ class App extends Component {
 class Posts extends React.Component {
   constructor(props){
     super(props);
+    this.colRef = firestore.collection('songs');
     this.state = {
       show: false,
+      name: '',
       description: '',
+      txtComment: '',
+      comment: [],
     } 
+    this.handlePostComment = this.handlePostComment.bind(this)
     this.handleCommentPrompt = this.handleCommentPrompt.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
+
+  handleChange(event){
+    this.setState({ [event.target.name]: event.target.value });
+  }
+
+  handlePostComment(event){
+    event.preventDefault()
+    const {doc} = this.props
+    this.colRef.doc(doc.id).collection('comments').add({
+      comment: this.state.txtComment
+    })
+    .then(state => {
+      //set state to empty bitach
+    })
+  }
+
 
   handleCommentPrompt(){
     this.setState({show: true})
-    //get title
-    //get description
-    //firebase galore stuff
+    const {doc} = this.props 
+    this.colRef.doc(doc.id).get().then(post => this.setState({
+      name: post.data().name,
+      description: post.data().description
+    }))
+    
+  
+    this.colRef.doc(doc.id).collection('comments').get().then(comments => {
+      
+      const coms = comments.docs.map((snapshot) => ({
+        id: snapshot.id,
+        data: snapshot.data()
+      }))
+      this.setState({
+        comment: coms
+      });
+    })
 
+  }
+
+  renderComments(){
+    const {comment} = this.state;
+    return <div> {comment.map((doc) => <li key={doc.id}> {doc.data.comment} </li> )} </div>
   }
 
   handleClose(){
@@ -131,20 +172,25 @@ class Posts extends React.Component {
     return (
       <div className='App'>
       <p>{name} - {description} - {genre}</p>
-      <input type="button" value="Comment" onClick={this.handleCommentPrompt} />
+      <input type="button" key={doc.id} value="Comment" onClick={this.handleCommentPrompt} />
       <br/>
       {video}
 
           <Modal show={this.state.show} onHide={this.handleClose}>
               <Modal.Body>
-                <form onSubmit={this.handlePostComment}>
-                  <p>Title of post</p>
-                  <p>description of post</p>
-                  <textarea placeholder="Have something to say about this post?"
-                   name="description" value={this.state.description} onChange={this.handleChange}>
+                
+                  <p>{this.state.name}</p>
+                  <p>{this.state.description}</p>
+                   
+                   
+                   <form onSubmit={this.handlePostComment}>
+                   <textarea placeholder="Have something to say about this post?"
+                   name="txtComment" value={this.state.txtComment} onChange={this.handleChange}>
                    </textarea><br/>
-                  <input type="submit"  value="Comment"/>
+                  <input type="submit" value="Comment"/>
                 </form>
+                <ul>{this.renderComments()}</ul>
+
               </Modal.Body>
             </Modal>
       
